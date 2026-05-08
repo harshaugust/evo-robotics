@@ -3,10 +3,6 @@ from arena import Arena
 
 
 class Robot:
-    """
-    Differential-drive robot in a bounded arena.
-    No torus wrap — position is clamped to arena boundaries.
-    """
 
     def __init__(self, x: float, y: float, heading: float,
                  arena: Arena,
@@ -22,14 +18,13 @@ class Robot:
         self.max_speed = max_speed
         self.max_turn = max_turn
         self.turn_gain = turn_gain
-        self.radius = radius          # physical robot radius (for clamping)
+        self.radius = radius
 
     def update(self, vl: float, vr: float) -> None:
         delta_phi = self.turn_gain * (vr - vl)
         delta_phi = np.clip(delta_phi, -self.max_turn, self.max_turn)
         self.heading = (self.heading + delta_phi) % (2 * np.pi)
 
-        # allow small negative speed so emergency reverse works
         speed = np.clip((vl + vr) / 2.0, -self.max_speed * 0.4, self.max_speed)
         nx = self.x + speed * np.cos(self.heading)
         ny = self.y + speed * np.sin(self.heading)

@@ -1,8 +1,3 @@
-"""
-Task 1 — Braitenberg Vehicles
-Run this file to produce all required plots.
-"""
-
 import sys
 import os
 sys.path.insert(0, os.path.dirname(__file__))
@@ -19,16 +14,13 @@ from robot import Robot
 from vehicles import Fear, Aggressor
 
 
-# ── shared parameters ──────────────────────────────────────────────────────────
 WORLD_W, WORLD_H = 200.0, 200.0
-LIGHT_X, LIGHT_Y = 100.0, 100.0   # light at center
+LIGHT_X, LIGHT_Y = 100.0, 100.0
 STEPS = 1000
 
 world = World(WORLD_W, WORLD_H)
 light = LightSource(LIGHT_X, LIGHT_Y, world, I_max=1.0, k=0.008)
 
-
-# ── helper ─────────────────────────────────────────────────────────────────────
 
 def make_robot(x, y, heading):
     return Robot(x, y, heading, world, max_speed=3.0, max_turn=np.pi / 8,
@@ -39,11 +31,9 @@ def plot_trajectory(ax, traj, color, label):
     xs = [p[0] for p in traj]
     ys = [p[1] for p in traj]
     ax.plot(xs, ys, color=color, linewidth=0.8, alpha=0.85, label=label)
-    ax.plot(xs[0], ys[0], 'o', color=color, markersize=6)   # start
-    ax.plot(xs[-1], ys[-1], 's', color=color, markersize=6)  # end
+    ax.plot(xs[0], ys[0], 'o', color=color, markersize=6)
+    ax.plot(xs[-1], ys[-1], 's', color=color, markersize=6)
 
-
-# ── Plot 1: light intensity field ──────────────────────────────────────────────
 
 def plot_light_field():
     field = light.intensity_field(resolution=300)
@@ -64,8 +54,6 @@ def plot_light_field():
     plt.close(fig)
 
 
-# ── Plot 2: sensor readings across space ──────────────────────────────────────
-
 def plot_sensor_readings():
     from sensors import LightSensor
     sensor_l = LightSensor(+np.pi / 4, arm=10.0)
@@ -78,7 +66,7 @@ def plot_sensor_readings():
     sr_field = np.zeros((resolution, resolution))
     diff_field = np.zeros((resolution, resolution))
 
-    heading = 0.0  # robot pointing right — fixed for this illustration
+    heading = 0.0
     for i, y in enumerate(ys):
         for j, x in enumerate(xs):
             r = Robot(x, y, heading, world)
@@ -103,8 +91,6 @@ def plot_sensor_readings():
     print("Saved: sensor_readings.png")
     plt.close(fig)
 
-
-# ── Plot 3: trajectories — Fear ────────────────────────────────────────────────
 
 def plot_fear():
     inits = [
@@ -140,8 +126,6 @@ def plot_fear():
     plt.close(fig)
 
 
-# ── Plot 4: trajectories — Aggressor ──────────────────────────────────────────
-
 def plot_aggressor():
     inits = [
         (30,  30,  np.pi / 6,     "blue"),
@@ -175,8 +159,6 @@ def plot_aggressor():
     print("Saved: trajectory_aggressor.png")
     plt.close(fig)
 
-
-# ── Plot 5: combined side-by-side ──────────────────────────────────────────────
 
 def plot_combined():
     inits = [
@@ -215,8 +197,6 @@ def plot_combined():
     print("Saved: trajectories_combined.png")
     plt.close(fig)
 
-
-# ── entrypoint ─────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))

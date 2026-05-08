@@ -1,8 +1,3 @@
-"""
-Task 2 — Proximity sensors and rule-based navigation
-Run this file to produce trajectory plots.
-"""
-
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -18,7 +13,7 @@ from robot import Robot
 from controller import ProximityController
 
 ARENA_SIZE = 200.0
-SENSOR_RANGE = ARENA_SIZE * 0.15   # 15% of arena size = 30 units
+SENSOR_RANGE = ARENA_SIZE * 0.15
 STEPS = 6000
 
 COLORS = ["#e74c3c", "#2ecc71", "#3498db", "#f39c12"]
@@ -72,7 +67,6 @@ def run_and_plot():
         traj  = ctrl.run(STEPS)
         plot_trajectory(ax, traj, col, f"({x0},{y0})")
 
-    # legend
     legend_els = [
         Line2D([0], [0], color=c, linewidth=1.5,
                label=f"({x},{y})")
@@ -92,14 +86,12 @@ def run_and_plot():
     print("Saved: trajectory_task2.png")
     plt.close(fig)
 
-    # ── coverage heatmap ───────────────────────────────────────────────────
     fig2, ax2 = plt.subplots(figsize=(7, 7))
     ax2.set_facecolor("#0d0d1a")
     ax2.set_xlim(0, ARENA_SIZE); ax2.set_ylim(0, ARENA_SIZE)
     ax2.set_aspect("equal")
     ax2.set_title("Exploration coverage heatmap", fontsize=11)
 
-    # collect positions from all runs combined
     all_x, all_y = [], []
     for (x0, y0, h0) in inits:
         robot = make_robot(x0, y0, h0, arena)

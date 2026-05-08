@@ -1,11 +1,3 @@
-"""
-Task 2 — Pygame live visualizer (4 robots simultaneously)
-Controls:
-  R      → reset all robots to new random positions
-  SPACE  → pause / resume
-  ESC/Q  → quit
-"""
-
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -18,7 +10,6 @@ from arena import Arena
 from robot import Robot
 from controller import ProximityController
 
-# ── constants ──────────────────────────────────────────────────────────────────
 ARENA_SIZE      = 200.0
 SCREEN_SIZE     = 700
 PANEL_H         = 90
@@ -29,12 +20,11 @@ STEPS_PER_FRAME = 3
 SENSOR_RANGE    = ARENA_SIZE * 0.15
 MAX_TRAIL       = 3000
 
-# one colour per robot
 ROBOT_COLORS = [
-    (220,  80,  80),   # red
-    ( 80, 200,  80),   # green
-    ( 80, 140, 255),   # blue
-    (255, 190,  50),   # orange
+    (220,  80,  80),
+    ( 80, 200,  80),
+    ( 80, 140, 255),
+    (255, 190,  50),
 ]
 
 SENSOR_COLS = {
@@ -48,8 +38,6 @@ WALL_COL = (110, 110, 150)
 PANEL_BG = (20,  20,  40)
 TEXT_COL = (210, 210, 210)
 
-
-# ── helpers ────────────────────────────────────────────────────────────────────
 
 def w2s(x, y):
     return int(x * SCALE), int((ARENA_SIZE - y) * SCALE)
@@ -70,8 +58,6 @@ def random_sim(arena):
     return make_sim(arena, x0, y0, h0)
 
 
-# ── drawing ────────────────────────────────────────────────────────────────────
-
 def draw_arena(surf, arena):
     for wall in arena.walls:
         pygame.draw.line(surf, WALL_COL, w2s(*wall.p1), w2s(*wall.p2), 3)
@@ -81,16 +67,13 @@ def draw_robot(surf, robot, ctrl, color):
     rx, ry = w2s(robot.x, robot.y)
     r = max(5, int(robot.radius * SCALE * 0.85))
 
-    # body
     pygame.draw.circle(surf, color, (rx, ry), r)
     pygame.draw.circle(surf, (255, 255, 255), (rx, ry), r, 1)
 
-    # heading arrow
     hx = rx + int(r * 1.8 * math.cos(robot.heading))
     hy = ry - int(r * 1.8 * math.sin(robot.heading))
     pygame.draw.line(surf, (255, 255, 255), (rx, ry), (hx, hy), 2)
 
-    # sensor rays
     for sensor, key in [(ctrl.sensor_fl, "fl"),
                         (ctrl.sensor_f,  "f"),
                         (ctrl.sensor_fr, "fr")]:
@@ -112,7 +95,6 @@ def draw_panel(surf, font, step, sims, paused):
     surf.blit(font.render(f"Step: {step}   {status}   ({len(sims)} robots)",
                           True, TEXT_COL), (12, panel_y + 6))
 
-    # sensor values per robot on second line
     x_off = 12
     for i, (robot, ctrl, color) in enumerate(sims):
         fl = ctrl.sensor_fl.read(robot, ctrl.arena)
@@ -135,8 +117,6 @@ def draw_legend(surf, font):
         y += 18
 
 
-# ── main ───────────────────────────────────────────────────────────────────────
-
 def main():
     pygame.init()
     pygame.display.set_caption("Task 2 — 4 Robots, Proximity Sensors")
@@ -147,12 +127,10 @@ def main():
 
     arena = Arena(ARENA_SIZE)
 
-    # pre-render static arena
     arena_surf = pygame.Surface((SCREEN_SIZE, SCREEN_SIZE))
     arena_surf.fill(BG)
     draw_arena(arena_surf, arena)
 
-    # fixed start positions (one per corner)
     starts = [
         (30,  30,  math.pi / 4),
         (170, 30,  math.pi * 3 / 4),
@@ -203,7 +181,6 @@ def main():
                     curr = robot.position
                     trails[i].append(curr)
 
-                    # draw onto persistent trail surface
                     tr_col = (*color, 120)
                     pygame.draw.line(trail_surfs[i], tr_col,
                                      w2s(*prev), w2s(*curr), 1)
@@ -212,7 +189,6 @@ def main():
                         trails[i] = trails[i][-MAX_TRAIL:]
                 step += 1
 
-        # ── render ──────────────────────────────────────────────────────────
         screen.blit(arena_surf, (0, 0))
         for ts in trail_surfs:
             screen.blit(ts, (0, 0))

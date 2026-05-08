@@ -1,13 +1,3 @@
-"""
-Task 1 — Pygame live visualizer
-Controls:
-  F   → run Fear vehicle
-  A   → run Aggressor vehicle
-  R   → reset / new random start
-  SPACE → pause / resume
-  ESC / Q → quit
-"""
-
 import sys
 import os
 sys.path.insert(0, os.path.dirname(__file__))
@@ -23,18 +13,16 @@ from robot import Robot
 from sensors import LightSensor
 from vehicles import Fear, Aggressor
 
-# ── constants ──────────────────────────────────────────────────────────────────
 WORLD_W, WORLD_H = 200.0, 200.0
-SCREEN_W, SCREEN_H = 700, 700        # pixels
-PANEL_H = 80                          # bottom info panel height
-SCALE = SCREEN_W / WORLD_W           # world units → pixels
+SCREEN_W, SCREEN_H = 700, 700
+PANEL_H = 80
+SCALE = SCREEN_W / WORLD_W
 
 FPS = 60
-STEPS_PER_FRAME = 2                  # simulation steps per rendered frame
+STEPS_PER_FRAME = 2
 
 LIGHT_X, LIGHT_Y = 100.0, 100.0
 
-# colours
 BG_DARK       = (13,  13,  13)
 PANEL_BG      = (25,  25,  35)
 LIGHT_COLOUR  = (255, 220, 80)
@@ -46,29 +34,23 @@ TEXT_COLOUR   = (220, 220, 220)
 WALL_COLOUR   = (60,  60,  80)
 
 
-# ── helpers ────────────────────────────────────────────────────────────────────
-
 def w2s(x: float, y: float) -> tuple[int, int]:
-    """World coordinates → screen pixel (y flipped)."""
     return int(x * SCALE), int((WORLD_H - y) * SCALE)
 
 
 def build_light_surface(light: LightSource, resolution: int = 200) -> pygame.Surface:
-    """Pre-render the light field into a pygame Surface."""
     surf = pygame.Surface((SCREEN_W, SCREEN_H))
     field = light.intensity_field(resolution)
-    # field is (resolution x resolution), origin lower-left
-    # we need to map to pixels
     cell_w = SCREEN_W / resolution
     cell_h = SCREEN_H / resolution
     for i in range(resolution):
         for j in range(resolution):
-            v = field[i, j]           # i=row (y), j=col (x)
+            v = field[i, j]
             r = int(min(255, v * 255 * 1.2))
             g = int(min(255, v * 220))
             b = int(v * 80)
             px = int(j * cell_w)
-            py = int((resolution - 1 - i) * cell_h)   # flip y
+            py = int((resolution - 1 - i) * cell_h)
             pygame.draw.rect(surf, (r, g, b),
                              (px, py, max(1, int(cell_w)+1), max(1, int(cell_h)+1)))
     return surf
@@ -80,14 +62,11 @@ def draw_robot(surf: pygame.Surface, robot: Robot,
     rx, ry = w2s(robot.x, robot.y)
     radius = 8
 
-    # body
     pygame.draw.circle(surf, ROBOT_COLOUR, (rx, ry), radius)
-    # heading arrow
     hx = rx + int(radius * 1.6 * math.cos(robot.heading))
-    hy = ry - int(radius * 1.6 * math.sin(robot.heading))   # y flipped
+    hy = ry - int(radius * 1.6 * math.sin(robot.heading))
     pygame.draw.line(surf, (255, 255, 255), (rx, ry), (hx, hy), 2)
 
-    # sensors
     for sensor, val in [(sensor_l, sl), (sensor_r, sr)]:
         sx, sy = sensor.position(robot)
         px, py = w2s(sx, sy)
@@ -100,11 +79,9 @@ def draw_robot(surf: pygame.Surface, robot: Robot,
 def draw_trail(surf: pygame.Surface, trail: list, colour: tuple) -> None:
     if len(trail) < 2:
         return
-    # draw segments; skip jumps caused by torus wrap
     for i in range(1, len(trail)):
         x0, y0 = trail[i - 1]
         x1, y1 = trail[i]
-        # skip if the robot wrapped around (large jump)
         if abs(x1 - x0) > WORLD_W / 2 or abs(y1 - y0) > WORLD_H / 2:
             continue
         p0 = w2s(x0, y0)
@@ -131,15 +108,12 @@ def draw_panel(surf: pygame.Surface, font: pygame.font.Font,
 
 def draw_light_marker(surf: pygame.Surface) -> None:
     lx, ly = w2s(LIGHT_X, LIGHT_Y)
-    # glowing star
     for r, alpha in [(18, 40), (12, 80), (6, 180)]:
         glow = pygame.Surface((r*2, r*2), pygame.SRCALPHA)
         pygame.draw.circle(glow, (*LIGHT_COLOUR, alpha), (r, r), r)
         surf.blit(glow, (lx - r, ly - r))
     pygame.draw.circle(surf, (255, 255, 255), (lx, ly), 4)
 
-
-# ── main ───────────────────────────────────────────────────────────────────────
 
 def main():
     pygame.init()
@@ -159,7 +133,6 @@ def main():
     sensor_l = LightSensor(+math.pi / 4, arm=10.0)
     sensor_r = LightSensor(-math.pi / 4, arm=10.0)
 
-    # state
     vehicle_name = "Fear"
     VehicleClass = Fear
     trail_colour = TRAIL_FEAR
@@ -179,13 +152,11 @@ def main():
     paused = False
     sl = sr = 0.0
 
-    # welcome overlay
     show_welcome = True
-    welcome_timer = 180  # frames
+    welcome_timer = 180
 
     running = True
     while running:
-        # ── events ──────────────────────────────────────────────────────────
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -214,7 +185,6 @@ def main():
                     trail = [vehicle.robot.position]
                     step = 0
 
-        # ── simulation step ─────────────────────────────────────────────────
         if not paused:
             for _ in range(STEPS_PER_FRAME):
                 vl, vr = vehicle.step()
@@ -224,18 +194,15 @@ def main():
             sl = sensor_l.read(vehicle.robot, light)
             sr = sensor_r.read(vehicle.robot, light)
 
-        # keep trail from growing forever
         if len(trail) > 4000:
             trail = trail[-4000:]
 
-        # ── draw ────────────────────────────────────────────────────────────
         screen.blit(light_surf, (0, 0))
         draw_light_marker(screen)
         draw_trail(screen, trail, trail_colour)
         draw_robot(screen, vehicle.robot, sensor_l, sensor_r, sl, sr)
         draw_panel(screen, font, vehicle_name, step, sl, sr, paused)
 
-        # welcome overlay
         if show_welcome:
             welcome_timer -= 1
             if welcome_timer <= 0:
